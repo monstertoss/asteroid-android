@@ -10,6 +10,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.net.wifi.WifiManager;
+import android.os.Build;
+import android.os.PowerManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.NotificationCompat;
 import android.util.Base64;
@@ -37,6 +39,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
@@ -44,6 +49,7 @@ import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -56,6 +62,9 @@ public class ServerService extends IntentService {
 
     private static String TAG = "ServerService";
 
+    private static byte[] WHO = {0x49,0x4c,0x7b,(byte)0xae,0x30,0x30,0x69,(byte)0x9e};
+    private static byte[] HERE = {0x22,(byte)0xd6,(byte)0xb1,0x4b,0x35,0x28,0x10,0x51};
+
     private SharedPreferences preferences;
 
     private KeyPair keyPair;
@@ -66,6 +75,8 @@ public class ServerService extends IntentService {
     private boolean shouldServerBeRunning = true;
 
     private ServerSocket serverSocket;
+    private DatagramSocket udpServerSocket;
+
     private HashMap<String, SocketData> sockets = new HashMap<>();
     private HashMap<String, SocketData> authorizedSockets = new HashMap<>();
     private HashMap<String, Thread> threads = new HashMap<>();
@@ -86,9 +97,11 @@ public class ServerService extends IntentService {
         // Make sure the system doesn't stop the server easily
         startForeground(1, buildNotification(0));
 
-        // Acquire wifi lock
+        // Acquire wifi locks
         WifiManager.WifiLock wifiLock = ((WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, MainActivity.PACKAGE_NAME);
         wifiLock.acquire();
+        WifiManager.MulticastLock multicastLock = ((WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE)).createMulticastLock(MainActivity.PACKAGE_NAME);
+        multicastLock.acquire();
 
         keyDB = new KeyDatabase(this);
 
@@ -105,12 +118,10 @@ public class ServerService extends IntentService {
             public void onReceive(Context context, Intent intent) {
                 Log.d(TAG, "Received stop");
 
-                if(serverSocket == null)
-                    return;
-
                 shouldServerBeRunning = false;
                 try {
                     serverSocket.close();
+                    udpServerSocket.close();
                 } catch(IOException e) {}
             }
         }, new IntentFilter("ServerService.stop"));
@@ -118,6 +129,53 @@ public class ServerService extends IntentService {
         try {
             // Open a new listening socket (TCP; unencrypted)
             serverSocket = new ServerSocket(8877);
+            // Open a listening socket (UDP; unencrypted) for automagically detecting devices on the lan
+            udpServerSocket = new DatagramSocket(8877, InetAddress.getByName("0.0.0.0"));
+            udpServerSocket.setBroadcast(true);
+
+            // Spawn a thread to handle UDP packets
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Log.v(TAG, "UDP Server online");
+
+                        while (shouldServerBeRunning) {
+                            byte[] bytes = new byte[128];
+                            DatagramPacket packet = new DatagramPacket(bytes, bytes.length);
+                            udpServerSocket.receive(packet);
+
+                            if(!Arrays.equals(WHO, Arrays.copyOfRange(packet.getData(), 0, WHO.length)))
+                                return;
+
+                            String fingerprint = new String(Arrays.copyOfRange(packet.getData(), WHO.length, packet.getLength())).trim();
+
+                            boolean isKeyKnown = keyDB.DoesFingerprintExist(fingerprint);
+
+                            Log.d(TAG, "Got WHO packet from server: " + fingerprint + (isKeyKnown ? " (Known)" : " (Unknown)"));
+
+                            byte[] nameBytes = (Build.MANUFACTURER + " " + Build.MODEL).getBytes();
+                            byte[] sendData = new byte[HERE.length + 1 + nameBytes.length];
+
+                            System.arraycopy(HERE, 0, sendData, 0, HERE.length);
+                            sendData[HERE.length] = (byte)(isKeyKnown ? 0x02 : 0x01);
+                            System.arraycopy(nameBytes, 0, sendData, HERE.length+1, nameBytes.length);
+
+                            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, packet.getAddress(), packet.getPort());
+                            udpServerSocket.send(sendPacket);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        Log.v(TAG, "UDP Server offline");
+                        shouldServerBeRunning = false;
+                        try {
+                            serverSocket.close();
+                        } catch(IOException e) {}
+                    }
+                }
+            }, "UDP").start();
+
             while (shouldServerBeRunning) {
                 try {
                     // wait until someone connect and accept that connection
@@ -273,8 +331,9 @@ public class ServerService extends IntentService {
             }
             // Close the key database
             keyDB.close();
-            // Release the wifi lock
+            // Release the wifi locks
             wifiLock.release();
+            multicastLock.release();
             // Notify the UI
             LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("MainActivity.stopped"));
 
