@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Asteroid</string>
+    <string name="startServer">Start Server</string>
+    <string name="stopServer">Stop Server</string>
+
+    <string name="serviceDescription">This service runs the Asteroid server and makes sure it is not killed by the system.</string>
+    <string name="asteroidIsRunning">Asteroid is running!</string>
+
+    <string name="notificationChannel">Asteroid status notifications</string>
+    <plurals name="notificationText">
+        <item quantity="one">%1$d connected device</item>
+        <item quantity="other">%1$d connected devices</item>
+    </plurals>
+
+    <string name="confirmKeyTitle">Confirm Public Key!</string>
+    <string name="confirmKeyExplanation">A new computer is accessing Asteroid. If you are connecting your computer with your phone, please confirm that the fingerprint shown at the computer is the same as the one below. If that is not the case or you are not running Asteroid on your computer, press cancel!</string>
 </resources>
