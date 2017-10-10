@@ -42,6 +42,7 @@ import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
@@ -165,7 +166,6 @@ public class ServerService extends IntentService {
                             udpServerSocket.send(sendPacket);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
                     } finally {
                         Log.v(TAG, "UDP Server offline");
                         shouldServerBeRunning = false;
