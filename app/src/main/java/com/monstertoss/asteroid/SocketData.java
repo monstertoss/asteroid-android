@@ -1,12 +1,12 @@
 package com.monstertoss.asteroid;
 
-import android.util.Base64;
+import android.util.Log;
 
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 import java.net.Socket;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
@@ -14,13 +14,14 @@ import java.util.Random;
 
 class SocketData {
 
+    private static String TAG = "SocketData";
+
     static int ID_LENGTH = 32;
 
     // Initialize socket data
     SocketData(Socket socket) {
         this.socket = socket;
         this.state = SocketState.UNKNOWN;
-        this.shouldBeRunning = true;
 
         Random randomService = new Random();
         StringBuilder sb = new StringBuilder();
@@ -40,8 +41,8 @@ class SocketData {
     Socket socket;
     // The socket's state. For normal usage, this should always be checked to be AUTHORIZED
     SocketState state;
-    // This starts with true and should be set to false on any error or intended socket close. This triggers the socket to be closed and all cleanup to happen
-    boolean shouldBeRunning;
+
+    Thread thread;
 
     // The client's public key and fingerprint, if state != UNKNOWN.
     RSAPublicKey publicKey;
@@ -54,27 +55,22 @@ class SocketData {
     BufferedInputStream inputStream;
     BufferedOutputStream outputStream;
 
-    ArrayList<ArrayList<Byte>> inputBuffer;
-    ArrayList<ArrayList<Byte>> outputBuffer;
+    ArrayList<Packet> inputBuffer;
+    ArrayList<Packet> outputBuffer;
 
     // Queue a packet to be sent
     void send(MessageOpcode opCode, JSONObject message) {
-        ArrayList<Byte> msg = new ArrayList<>();
+        outputBuffer.add(new Packet(opCode, message));
+        String payload = message.toString();
 
-        // Convert JSON to string and encode with Base64
-        String jsonString = message.toString();
-        byte[] bytes = new byte[0];
+        Log.d(TAG, "Sending message with opcode: " + opCode.ordinal() + " and content: " + (payload.length() > 100 ? payload.substring(0, 100) + "..." : payload));
+    }
+
+    void close() {
+        thread.interrupt();
         try {
-            bytes = Base64.encode(jsonString.getBytes("UTF-8"), Base64.NO_WRAP);
-        } catch(UnsupportedEncodingException e) {}
-
-        // First the opcode, then the message, then a linebreak
-        msg.add((byte)opCode.ordinal());
-        for(byte b : bytes) {
-            msg.add(b);
-        }
-        msg.add((byte)'\n');
-
-        outputBuffer.add(msg);
+            if (!socket.isClosed())
+                socket.close();
+        } catch(IOException e) {}
     }
 }

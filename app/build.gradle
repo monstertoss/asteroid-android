@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26"
+    buildToolsVersion '26.0.3'
     defaultConfig {
         applicationId "com.monstertoss.asteroid"
         minSdkVersion 16
@@ -27,6 +27,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:26.1.0'
     compile 'org.bouncycastle:bcpkix-jdk15on:1.58'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile project(":zstd-android")
     testCompile 'junit:junit:4.12'
 }
 

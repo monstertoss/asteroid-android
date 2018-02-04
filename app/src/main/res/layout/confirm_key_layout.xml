@@ -9,7 +9,7 @@
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:layout_marginTop="20dp"
-        android:text="@string/confirmKeyExplanation" />
+        android:text="@string/confirmkeyDescription" />
 
     <TextView
         android:id="@+id/confirmKeyFingerprint"

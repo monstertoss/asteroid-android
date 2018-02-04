@@ -17,7 +17,12 @@ enum MessageOpcode {
     // Server OK to client response
     S2C_HANDSHAKE_OK,
     // RESERVED. Client OK to server response
-    C2S_HANDSHAKE_OK;
+    C2S_HANDSHAKE_OK,
+
+    // Client requests all contacts from server
+    C2S_REQUEST_CONTACTS,
+    // Server sends all contacts
+    S2C_RESPONSE_CONTACTS;
 
     // Convert byte to opcode
     static MessageOpcode from(byte value) {

@@ -3,6 +3,8 @@
     <string name="startServer">Start Server</string>
     <string name="stopServer">Stop Server</string>
 
+    <string name="settings">Settings</string>
+
     <string name="serviceDescription">This service runs the Asteroid server and makes sure it is not killed by the system.</string>
     <string name="asteroidIsRunning">Asteroid is running!</string>
 
@@ -13,5 +15,8 @@
     </plurals>
 
     <string name="confirmKeyTitle">Confirm Public Key!</string>
-    <string name="confirmKeyExplanation">A new computer is accessing Asteroid. If you are connecting your computer with your phone, please confirm that the fingerprint shown at the computer is the same as the one below. If that is not the case or you are not running Asteroid on your computer, press cancel!</string>
+    <string name="confirmkeyDescription">A new computer is accessing Asteroid. If you are connecting your computer with your phone, please confirm that the fingerprint shown at the computer is the same as the one below. If that is not the case or you are not running Asteroid on your computer, press cancel!</string>
+
+    <string name="noPermissionsTitle">No permissions!</string>
+    <string name="noPermissionsDescription">You tried to start Asteroid but you did not grant the permission to access Contacts. Asteroid will only run if it has this permission.</string>
 </resources>

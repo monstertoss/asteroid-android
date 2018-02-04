@@ -1,0 +1,3 @@
+[submodule "zstd-android"]
+	path = zstd-android
+	url = https://github.com/monstertoss/zstd-android
