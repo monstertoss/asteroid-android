@@ -1,1 +1,1 @@
-include ':app', ':zstd-android'
+include ':app', ':zstd-jni'

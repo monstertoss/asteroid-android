@@ -1,6 +1,8 @@
 package com.monstertoss.asteroid;
 
 enum MessageOpcode {
+    BYE,
+
     // First, the client sends its public key
     C2S_HANDSHAKE_PUBLIC_KEY,
     // The server responds if the key is known or unknown, in the latter case the client shows its fingerprint for confirmation. KNOWN is also sent after confirming the key for the client to hide it again.

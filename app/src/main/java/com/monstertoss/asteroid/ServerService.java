@@ -7,17 +7,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.os.Looper;
 import android.support.v7.app.NotificationCompat;
 import android.util.Base64;
 import android.util.Log;
-
-import com.monstertoss.zstd_android.ZstdInputStream;
-import com.monstertoss.zstd_android.ZstdOutputStream;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -31,8 +26,6 @@ import org.bouncycastle.crypto.tls.TlsSignerCredentials;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -407,6 +400,10 @@ public class ServerService extends IntentService {
     private void handleMessage(Packet packet, final SocketData data) {
         try {
             switch (packet.getOpCode()) {
+                case BYE:
+                    data.close();
+                    break;
+
                 // The client sent its public key
                 case C2S_HANDSHAKE_PUBLIC_KEY:
                     HandshakeHandler.HandlePublicKey(this, packet, data);

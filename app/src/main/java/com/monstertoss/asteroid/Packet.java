@@ -1,15 +1,13 @@
 package com.monstertoss.asteroid;
 
 import android.util.Base64;
-import android.util.Log;
 
-import com.monstertoss.zstd_android.Zstd;
+import com.github.luben.zstd.Zstd;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 public class Packet {
     MessageOpcode opCode;
