@@ -23,20 +23,20 @@ class ContactsHandler {
 
         new ContactsLoader(context, new ContactsLoader.OnContactsLoaded() {
             @Override
-            public void onLoadComplete(Cursor contacts, Cursor rawContacts, Cursor contactsData, JSONArray dataKinds) {
-                sendContacts(context, data, contacts, rawContacts, contactsData, dataKinds);
+            public void onLoadComplete(Cursor contacts, Cursor rawContacts, Cursor contactsData, JSONObject thirdPartyData) {
+                sendContacts(context, data, contacts, rawContacts, contactsData, thirdPartyData);
             }
         });
     }
 
-    static void sendContacts(ServerService context, SocketData data, Cursor contacts, Cursor rawContacts, Cursor contactsData, JSONArray dataKinds) {
-        Log.d(TAG, "[" + data.id + "] Loaded " + dataKinds.length() + " DataKinds " + contacts.getCount() + " Contacts " + rawContacts.getCount() + " Raw Contacts " + contactsData.getCount() + " Datasets");
+    static void sendContacts(ServerService context, SocketData data, Cursor contacts, Cursor rawContacts, Cursor contactsData, JSONObject thirdPartyData) {
+        Log.d(TAG, "[" + data.id + "] Loaded " + thirdPartyData.length() + " Third party datasets " + contacts.getCount() + " Contacts " + rawContacts.getCount() + " Raw Contacts " + contactsData.getCount() + " Datasets");
         try {
             JSONObject payload = new JSONObject();
             payload.put("contacts", ContactsLoader.CursorToJSON(contacts));
             payload.put("rawContacts", ContactsLoader.CursorToJSON(rawContacts));
             payload.put("data", ContactsLoader.CursorToJSON(contactsData));
-            payload.put("dataKinds", dataKinds);
+            payload.put("thirdPartyData", thirdPartyData);
             data.send(S2C_RESPONSE_CONTACTS, payload);
         } catch(JSONException e) {}
     }
